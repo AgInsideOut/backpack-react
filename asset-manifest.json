@@ -1,0 +1,16 @@
+{
+  "files": {
+    "main.css": "/backpack-react/static/css/main.0543eb14.css",
+    "main.js": "/backpack-react/static/js/main.8845bae0.js",
+    "main.js.map": "/backpack-react/static/js/main.8845bae0.js.map",
+    "css.html": "/backpack-react/css.html",
+    "index.html": "/backpack-react/index.html",
+    "js.html": "/backpack-react/js.html",
+    "static/css/main.0543eb14.css.map": "/backpack-react/static/css/main.0543eb14.css.map",
+    "static/js/main.8845bae0.js.LICENSE.txt": "/backpack-react/static/js/main.8845bae0.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/css/main.0543eb14.css",
+    "static/js/main.8845bae0.js"
+  ]
+}
