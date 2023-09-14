@@ -1,203 +1,314 @@
-import React, { useState, Component } from 'react';
-import BpkCalendar from 'bpk-component-calendar';
-import BpkInput, { INPUT_TYPES } from 'bpk-component-input';
-import format from 'date-fns/format';
-import { BpkCode } from '@skyscanner/backpack-web/bpk-component-code';
+import React, { Component } from 'react';
+import BpkCalendar, { CALENDAR_SELECTION_TYPE } from '@skyscanner/backpack-web/bpk-component-calendar';
+import BpkInput, { INPUT_TYPES } from '@skyscanner/backpack-web/bpk-component-input';
 import BpkButton from '@skyscanner/backpack-web/bpk-component-button';
 import BpkText from '@skyscanner/backpack-web/bpk-component-text';
 import { cssModules } from '@skyscanner/backpack-web/bpk-react-utils';
+import format from 'date-fns/format';
+import {
+addMonths,
+addDays,
+startOfDay,
+isAfter,
+isSameDay,
+add,
+} from 'date-fns';
 import STYLES from './App.scss';
-
-const formatDateFull = date => format(date, 'EEEE, do MMMM yyyy');
-const formatMonth = date => format(date, 'MMMM yyyy');
 
 const getClassName = cssModules(STYLES);
 
-const CALENDAR_SELECTION_TYPE = {
-  range: 'range',
-  single: 'single',
-};
+const formatDateFull = (date) => format(date, 'EEEE, do MMMM yyyy');
+const formatMonth = (date) => format(date, 'MMMM yyyy');
 
-    const daysOfWeek =
-    [
-      {
+const daysOfWeek = [
+    {
         name: 'Sunday',
         nameAbbr: 'Sun',
         index: 0,
-        isWeekend: true
-      },
-      {
+        isWeekend: true,
+    },
+    {
         name: 'Monday',
         nameAbbr: 'Mon',
-        nameNarrow: 'M',
         index: 1,
-        isWeekend: false
-      },
-      {
+        isWeekend: false,
+    },
+    {
         name: 'Tuesday',
         nameAbbr: 'Tue',
-        nameNarrow: 'Tu',
         index: 2,
-        isWeekend: false
-      },
-      {
+        isWeekend: false,
+    },
+    {
         name: 'Wednesday',
         nameAbbr: 'Wed',
-        nameNarrow: 'W',
         index: 3,
-        isWeekend: false
-      },
-      {
+        isWeekend: false,
+    },
+    {
         name: 'Thursday',
         nameAbbr: 'Thu',
-        nameNarrow: 'Th',
         index: 4,
-        isWeekend: false
-      },
-      {
+        isWeekend: false,
+    },
+    {
         name: 'Friday',
         nameAbbr: 'Fri',
-        nameNarrow: 'F',
         index: 5,
-        isWeekend: false
-      },
-      {
+        isWeekend: false,
+    },
+    {
         name: 'Saturday',
         nameAbbr: 'Sat',
-        nameNarrow: 'Sa',
         index: 6,
-        isWeekend: true
-      }
-    ]
+        isWeekend: true,
+    },
+    ];
 
     export default class App extends Component {
-      constructor () {
-          super();
-  
-          this.state = {
-          selectionConfiguration: {
-            type: CALENDAR_SELECTION_TYPE.range,
-            startDate: null,
-            endDate: null
-          },
-          inputValue: '',
-          arrivalDate: null,
-          };
-      }
-  
-      handleDateSelect = (date) => {
-        const { selectionConfiguration } = this.state;
-      
-        if (!selectionConfiguration.startDate || (selectionConfiguration.startDate && selectionConfiguration.endDate)) {
-          // Jeśli nie ma wybranej daty wylotu lub obie daty (wylotu i przylotu) są już wybrane,
-          // to ustawiany jest nowy zakres daty wylotu i przylotu
-          this.setState((prevState) => ({
-            selectionConfiguration: {
-              type: CALENDAR_SELECTION_TYPE.range,
-              startDate: date,
-              endDate: null,
-            },
-            departureDateInputValue: formatDateFull(date),
-            arrivalDateInputValue: '', // Wyczyść datę przylotu
-          }));
-        } else if (selectionConfiguration.startDate && !selectionConfiguration.endDate) {
-          // Jeśli jest wybrana data wylotu, ale nie ma daty przylotu,
-          // to ustaw datę przylotu
-          this.setState((prevState) => ({
-            arrivalDate: date,
-            arrivalDateInputValue: formatDateFull(date),
-          }));
-        }
-      };
+        constructor() {
+            super();
+            this.state = {
+                selectionConfiguration: {
+                    type: CALENDAR_SELECTION_TYPE.range,
+                    startDate: null,
+                    endDate: null,
+                },
+                startDate: '',
+                endDate: '',
+                editingDeparture: true,
+                numberOfDays: 0,
+            };
+        }          
 
-      handleClearDates = () => {
+        handleDateSelect = (date) => {
+            const { selectionConfiguration, startDate, endDate, editingDeparture } = this.state;
+        
+            if (!startDate || editingDeparture) {
+            this.setState((prevState) => ({
+                startDate: formatDateFull(date),
+                selectionConfiguration: {
+                type: CALENDAR_SELECTION_TYPE.range,
+                startDate: date,
+                endDate: null,
+                },
+                editingDeparture: false,
+            }));
+            } else if (!endDate || editingDeparture || date < startDate) {
+                if (date < startDate) {
+                    alert('Arrival date must be later than departure date.');
+                } else {
+                    this.setState((prevState) => ({
+                    endDate: formatDateFull(date),
+                    selectionConfiguration: {
+                        ...prevState.selectionConfiguration,
+                        endDate: date,
+                    },
+                    editingDeparture: true,
+                    }));
+                }
+            } else {
+            // Handle the case when the same date is selected again for the second time
+            this.setState({
+                startDate: formatDateFull(date),
+                endDate: '',
+                selectionConfiguration: {
+                type: CALENDAR_SELECTION_TYPE.range,
+                startDate: date,
+                endDate: null,
+                },
+                editingDeparture: false,
+            });
+            }
+        };
+        
+        // Function that handles changing the number of days on the counter
+        handleNumberOfDaysChange = (event) => {
+            const numberOfDays = event.target.value;
+            this.setState({ numberOfDays });
+        
+            // Update arrival date based on number of days
+            if (this.state.selectionConfiguration.startDate) {
+            const arrivalDate = add(this.state.selectionConfiguration.startDate, {
+                days: numberOfDays,
+            });
+            this.setState({
+                endDate: formatDateFull(arrivalDate),
+                selectionConfiguration: {
+                ...this.state.selectionConfiguration,
+                endDate: arrivalDate,
+                },
+            });
+            }
+        };
+
+    // Functions that support field editing
+    handleDepartureEdit = () => {
+        this.setState({ editingDeparture: true });
+    };
+
+    handleArrivalEdit = () => {
+        this.setState({ editingDeparture: false });
+    };
+
+    handleClearDates = () => {
         this.setState({
-          selectionConfiguration: {
+        selectionConfiguration: {
             type: CALENDAR_SELECTION_TYPE.range,
             startDate: null,
             endDate: null,
-          },
-          departureDateInputValue: '',
-          arrivalDateInputValue: '',
+        },
+        startDate: '',
+        endDate: '',
         });
-      };
+    };
 
-      // Add the dateModifiers function, which returns the appropriate CSS classes for dates
-      dateModifiers = (date) => {
-        const { selectionConfiguration, arrivalDate } = this.state;
-      
-        if (
-          selectionConfiguration.startDate &&
-          arrivalDate &&
-          date > selectionConfiguration.startDate &&
-          date < arrivalDate
-        ) {
-          return ['highlighted-dates'];
+    dateModifiers = (date) => {
+        const { selectionConfiguration } = this.state;
+        const isDepartureDate = isSameDay(date, selectionConfiguration.startDate);
+        const isArrivalDate = isSameDay(date, selectionConfiguration.endDate);
+
+        const modifiers = {};
+
+        if (isDepartureDate) {
+        modifiers.departureDate = true;
         }
-      
-        return [];
-      };
 
-      // Add a dateProps function that adjusts the props for dates
-      dateProps = (date) => {
+        if (isArrivalDate) {
+        modifiers.arrivalDate = true;
+        }
+
+        if (selectionConfiguration.startDate && selectionConfiguration.endDate) {
+        if (isAfter(date, selectionConfiguration.startDate) && isAfter(selectionConfiguration.endDate, date)) {
+            modifiers.highlightedDates = true;
+        }
+        }
+
+        return modifiers;
+    };
+
+    dateProps = (date) => {
+        const modifiers = this.dateModifiers(date);
+
         return {
-          className: this.dateModifiers(date).join(' '),
+            className: Object.keys(modifiers).join(' '),
         };
-      };
+    };
 
     render() {
-      return (
-          <div className={getClassName('App')}>
+        // Create objects with functions for dateModifiers and dateProps
+        const dateModifiersObject = {};
+        const datePropsObject = {};
+
+        // Iteration through the days of the week
+        daysOfWeek.forEach((day) => {
+            const dayNameLower = day.nameAbbr.toLowerCase();
+            dateModifiersObject[dayNameLower] = (date) => this.dateModifiers(date);
+            datePropsObject[dayNameLower] = (date) => this.dateProps(date);
+        });
+
+        const inputContainerStyle = {
+            display: 'flex',
+            justifyContent: 'space between',
+        };
+
+        const inputStyle = {
+            width: '300px',
+            marginTop: '10px'
+        };
+
+        const parentContainerStyle = {
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+        };
+
+        const labelTextStyle = {
+            marginTop: '10px'
+        }
+
+        const buttonContainerStyle = {
+            display: 'flex',
+            justifyContent: 'centre',
+        };
+
+        const buttonStyle = {
+            marginTop: '20px',
+            marginRight: '20px'
+        };
+
+        return (
+        <div className={getClassName('App')}>
             <header className={getClassName('App__header')}>
-                <div className={getClassName('App__header-inner')}>
-                <BpkText tagName='h1' textStyle='xxl' className={getClassName('App__heading')}>
-                    Flight Schedule.
+            <div className={getClassName('App__header-inner')}>
+                <BpkText tagName="h1" textStyle="xxl" className={getClassName('App__heading')}>
+                Flight Schedule.
                 </BpkText>
-                </div>
+            </div>
             </header>
-            <main className={getClassName('App__main')}>
-              <BpkInput
+            <main className={getClassName('App__main')} style={parentContainerStyle}>
+            <BpkText tagName="p" style = {labelTextStyle}>Travel Days</BpkText>
+            <BpkInput
                 id="departureDateInput"
                 type={INPUT_TYPES.text}
                 name="departureDate"
-                value={this.state.departureDateInputValue}
+                value={this.state.startDate}
                 placeholder="Departure date"
                 onChange={(event) => {
-                  this.setState({ departureDateInputValue: event.target.value });
+                this.setState({ startDate: event.target.value });
                 }}
-              />
-              <br /><br />
-              <BpkInput
+                onFocus={this.handleDepartureEdit}
+                style = {inputStyle}
+            />
+            <BpkInput
                 id="arrivalDateInput"
                 type={INPUT_TYPES.text}
                 name="arrivalDate"
-                value={this.state.arrivalDateInputValue}
+                value={this.state.endDate}
                 placeholder="Arrival date"
                 onChange={(event) => {
-                  this.setState({ arrivalDateInputValue: event.target.value });
+                this.setState({ endDate: event.target.value });
                 }}
-              />
-              <br /><br />
-              {/* Render the BpkCalendar component */}
-              <BpkCalendar
-                id='calendar'
+                onFocus={this.handleArrivalEdit}
+                disabled={true}
+                style = {inputStyle}
+            />
+            <BpkText tagName="p" style = {labelTextStyle}>Number of Travel Days</BpkText>
+            <BpkInput
+                id="numberOfDaysInput"
+                type={INPUT_TYPES.number}
+                name="numberOfDays"
+                min="0"
+                value={this.state.numberOfDays.toString()}
+                placeholder="Number of days"
+                onChange={this.handleNumberOfDaysChange} // Handling change in number of days
+                style = {inputStyle}
+            />
+            <br />
+            <br />
+            {/* Render the BpkCalendar component */}
+            <BpkCalendar
+                id="calendar"
                 onDateSelect={this.handleDateSelect}
                 formatMonth={formatMonth}
                 formatDateFull={formatDateFull}
                 daysOfWeek={daysOfWeek}
-                weekStartsOn={1}
+                weekStartsOn={0}
                 changeMonthLabel="Change month"
                 nextMonthLabel="Next month"
                 previousMonthLabel="Previous month"
+                weekDayKey="nameAbbr"
                 selectionConfiguration={this.state.selectionConfiguration}
-                dateModifiers={this.dateModifiers}
-                dateProps={this.dateProps}
-              />
-              <br />
-              <BpkButton onClick={this.handleClearDate}>Clear</BpkButton>{' '} 
-              <BpkButton onClick={() => alert('It works!')}>Continue</BpkButton>
+                dateModifiers={dateModifiersObject}
+                dateProps={datePropsObject}
+            />
+            <br />
+            <div style={buttonContainerStyle}>
+                <BpkButton onClick={this.handleClearDates} style={buttonStyle}>Clear</BpkButton>{' '}
+                <BpkButton onClick={() => alert('It works!')} style={buttonStyle}>Continue</BpkButton>
+            </div>
             </main>
-          </div>
-      );
+        </div>
+        );
     }
-};
+}

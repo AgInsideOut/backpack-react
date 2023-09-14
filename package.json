@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@skyscanner/backpack-react-scripts": "^10.5.0",
+    "bpk-component-datepicker": "^18.1.2",
     "bpk-component-input": "^7.1.2",
     "bpk-react-utils": "^7.1.0",
     "date-fns": "^2.30.0"
