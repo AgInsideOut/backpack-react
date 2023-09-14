@@ -5,9 +5,9 @@
 > so please refer to [it's documentation](https://github.com/facebook/create-react-app/blob/master/packages/react-scripts/template/README.md)
 > for more usage information.
 
-# [_BACKPACK-REACT_]
+# BACKPACK-REACT
 
-[_Add a brief description of your project here._]
+The project comprises a travel calendar
 
 ## npm script commands
 
