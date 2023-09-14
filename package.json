@@ -11,6 +11,8 @@
     "date-fns": "^2.30.0"
   },
   "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build", 
     "start": "react-scripts start",
     "start-ssr": "react-scripts start-ssr",
     "build": "react-scripts build",
